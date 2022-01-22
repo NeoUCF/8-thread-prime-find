@@ -23,3 +23,12 @@ Please print the following output to a file named primes.txt:
 
 
 # How to Run the Program:
+java Primes.java
+
+
+# Resources Used:
+<https://stackoverflow.com/questions/17416949/how-to-get-an-integer-value-that-is-greater-than-the-maximum-integer-value>
+<https://stackoverflow.com/questions/21034955/when-to-use-long-vs-long-in-java>
+<https://stackoverflow.com/questions/2572868/how-to-time-java-program-execution-speed>
+<https://stackoverflow.com/questions/1590831/safely-casting-long-to-int-in-java>
+<https://stackoverflow.com/questions/7093186/the-literal-xyz-of-type-int-is-out-of-range/7093207>
