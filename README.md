@@ -44,5 +44,17 @@ Please print the following output to a file named primes.txt:
 * <https://www.youtube.com/watch?v=6Oo-9Can3H8&list=PLhfHPmPYPPRk6yMrcbfafFGSbE2EPK_A6&index=5>
 * <https://www.baeldung.com/java-atomic-variables>
 * <https://stackoverflow.com/questions/53964366/whats-the-difference-between-getvolatile-and-getacquire>
+* <https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/concurrent/atomic/AtomicLong.html>
+* <https://docs.oracle.com/javase/7/docs/api/java/util/concurrent/Executors.html#newFixedThreadPool(int)>
+* <https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/concurrent/ExecutorService.html>
+* <https://www.baeldung.com/java-executor-service-tutorial>
+* <https://docs.oracle.com/javase/7/docs/api/java/util/concurrent/ExecutorService.html#submit(java.lang.Runnable)>
+* <http://tutorials.jenkov.com/java-util-concurrent/executorservice.html>
 * <https://stackoverflow.com/questions/877096/how-can-i-pass-a-parameter-to-a-java-thread>
 * <https://stackoverflow.com/questions/1250643/how-to-wait-for-all-threads-to-finish-using-executorservice>
+* <https://stackoverflow.com/questions/3269445/executorservice-how-to-wait-for-all-tasks-to-finish>
+* <https://stackoverflow.com/questions/8183205/what-could-be-the-cause-of-rejectedexecutionexception/8183463>
+* <https://www.baeldung.com/java-queue-linkedblocking-concurrentlinked#concurrentlinkedqueue>
+* <https://stackoverflow.com/questions/28235693/java-concurrentlinkeddeque-vs-concurrentlinkedqueue-the-difference>
+
+Also Checkout the `commentedOut` branch to see other ideas and process tried.

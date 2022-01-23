@@ -1,3 +1,4 @@
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -9,20 +10,15 @@ public class Primes implements Runnable
     public static final int MAX_NUM_THREADS = 8;
     public static final long MAX_POOL = (long)1E7;
 
-
     public static final AtomicLong counter = new AtomicLong(1);
     public static final AtomicLong totalSum = new AtomicLong(2);
     public static final AtomicLong currentNum = new AtomicLong(3);
 
+    public static final ConcurrentLinkedQueue q = new ConcurrentLinkedQueue<>();
+
     public static void main(String[] args)
     {
-        // int coreCount = Runtime.getRuntime().availableProcessors();
-        // System.out.println(coreCount);
-
         findPrimes();
-        // Primes p = new Primes();
-        // Thread th = new Thread(p);
-        // th.start();
     }
 
     public void run()
@@ -33,7 +29,6 @@ public class Primes implements Runnable
     private static void findPrimes()
     {
         final long startTime = System.currentTimeMillis();
-        // oneThreadPrime(UP_TO);
         multiThreadPrime(UP_TO);
         final long endTime = System.currentTimeMillis();
 
@@ -72,26 +67,8 @@ public class Primes implements Runnable
 
     private static long multiThreadPrime(long n)
     {
-        // System.out.println(n);
-
         if (n < 2) return 0;
 
-        // ExecutorService service = Executors.newFixedThreadPool(MAX_NUM_THREADS);
-
-        // for (long i = 3; i <= n; i += 2)
-        // while (currentNum.getAcquire() <= (n / 4))
-        // {
-        //     service.submit(new TestPrimes(currentNum.getAcquire()));
-        //     currentNum.addAndGet(2);
-        // }
-        // service.shutdown();
-
-        // try {
-        //     service.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
-        // } catch (InterruptedException e) {
-        //     System.err.println("Error: " + e);
-        //     return -1L;
-        // }
         for (long i = MAX_POOL; i <= n; i += MAX_POOL)
             loop(i);
 
@@ -126,17 +103,12 @@ class TestPrimes extends Primes
     public TestPrimes(long i)
     {
         cur = i;
-        // System.out.println("log: " + cur);
     }
 
     public void run()
     {
-        // System.out.println("run: " + cur);
-
-        // System.out.println("Running thread!");
         if (isPrime(cur))
         {
-            // System.out.print(cur + ", ");
             totalSum.addAndGet(cur);
             counter.incrementAndGet();
         }
