@@ -1,6 +1,20 @@
 # How to Run the Program:
 On the command prompt, go to the directory which contains Primes.java, then run:
-java Primes.java
+`java Primes.java`
+
+
+
+# Design Summary:
+The program utilizes multiple threads by using the `import java.util.concurrent` library.
+## Informal Statement:
+This program checks every odd number up to 10<sup>8</sup> to see if it is prime. The program distributes the checking of each number to 8 processors (threads). When finding a prime, each thread will update shared counters to reveal the number of primes and the sum of those primes. This design is correct as it ensures that each thread gets a unique task and it updates the counters properly. This design is efficient as it utilizes all 8 threads and schedules the tasks to an available thread immediately.
+## Method for Finding Primes:
+The main approach for finding primes can be seen in the single-thread function `oneThreadPrime()`. Every iteration of the `for`-loop will increment the next number to check by 2 since every even number except 2 is composite. By starting on 3 and incrementing by 2, this reduces the numbers to check by half. For each iteration, `isPrime()` will be called and checks possible factors upto what is necessary.
+## Method for Multi-Threading:
+The threads use the same underlying method for finding primes, but we attempt to evenly distribute the amount of work among the threads. This is done by using the `ExecutorService` library. What it does is create a pool of threads assigned to a task when it is first spawned. This library is perfect for this usecase since we have many tasks (each number that needs to be checked) and only 8 available threads. `ExecutorService` handles the assignment of the tasks to threads by using an internal queue. When a thread is finished with their task, it receives a new task from the queue. `ExecutorService` ensures that each thread uniquely gets the next task so that no two thread is working on the same task.
+One issue that must be managed is the `OutOfMemoryError` caused by the large allocation of tasks. The way this is solved is by creating a max number of tasks. Then after that pool is complete, we reinitiate `ExecutorService` and continue with the next batch of tasks.
+While each thread is working their task, we keep track of how many primes that is countered and the sum of the primes by using atomic variables.
+
 
 
 # 8-thread-prime-find
@@ -29,6 +43,7 @@ Please print the following output to a file named primes.txt:
 
 # Resources Used:
 * <https://primes.utm.edu/howmany.html>
+* <http://compoasso.free.fr/primelistweb/page/prime/liste_online_en.php>
 * <https://stackoverflow.com/questions/17416949/how-to-get-an-integer-value-that-is-greater-than-the-maximum-integer-value>
 * <https://stackoverflow.com/questions/21034955/when-to-use-long-vs-long-in-java>
 * <https://stackoverflow.com/questions/2572868/how-to-time-java-program-execution-speed>
@@ -56,5 +71,10 @@ Please print the following output to a file named primes.txt:
 * <https://stackoverflow.com/questions/8183205/what-could-be-the-cause-of-rejectedexecutionexception/8183463>
 * <https://www.baeldung.com/java-queue-linkedblocking-concurrentlinked#concurrentlinkedqueue>
 * <https://stackoverflow.com/questions/28235693/java-concurrentlinkeddeque-vs-concurrentlinkedqueue-the-difference>
+* <https://www.geeksforgeeks.org/queue-interface-java/>
+* <https://stackoverflow.com/questions/4021855/preventing-concurrentlinkedqueuet-from-outofmemory-exception>
+* <https://stackoverflow.com/questions/1426754/linkedblockingqueue-vs-concurrentlinkedqueue>
+* <https://stackoverflow.com/questions/13398212/can-i-use-priorityblockingqueue-with-multiple-threads>
+* <https://stackoverflow.com/questions/5695017/priorityqueue-not-sorting-on-add>
 
 Also Checkout the `commentedOut` branch to see other ideas and process tried.

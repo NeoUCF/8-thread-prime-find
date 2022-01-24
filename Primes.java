@@ -1,20 +1,22 @@
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.Arrays;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class Primes implements Runnable
 {
     public static final long UP_TO = (long)1E8;
+    public static final long MAX_TASKS = (long)1E7;
     public static final int MAX_NUM_THREADS = 8;
-    public static final long MAX_POOL = (long)1E7;
+    public static final int MAX_QUEUE_SIZE = 10;
 
     public static final AtomicLong counter = new AtomicLong(1);
     public static final AtomicLong totalSum = new AtomicLong(2);
     public static final AtomicLong currentNum = new AtomicLong(3);
 
-    public static final ConcurrentLinkedQueue q = new ConcurrentLinkedQueue<>();
+    public static final PriorityBlockingQueue<Long> q = new PriorityBlockingQueue<Long>(MAX_QUEUE_SIZE);
 
     public static void main(String[] args)
     {
@@ -69,11 +71,19 @@ public class Primes implements Runnable
     {
         if (n < 2) return 0;
 
-        for (long i = MAX_POOL; i <= n; i += MAX_POOL)
+        for (long i = MAX_TASKS; i <= n; i += MAX_TASKS)
             loop(i);
+
+        while (q.size() != MAX_QUEUE_SIZE)
+            cleanQueue();
+
+        Object[] a = q.toArray();
+        Arrays.sort(a);
 
         System.out.println("totalSum: " + totalSum);
         System.out.println("counter: " + counter);
+        System.out.println(Arrays.toString(a));
+
         return totalSum.getAcquire();
     }
 
@@ -94,6 +104,18 @@ public class Primes implements Runnable
             System.err.println("Error: " + e);
         }
     }
+
+    public static void cleanQueue()
+    {
+        if (q.size() > MAX_QUEUE_SIZE)
+        {
+            try {
+                q.take();
+            } catch (InterruptedException e) {
+                System.err.println("Error: " + e);
+            }
+        }
+    }
 }
 
 class TestPrimes extends Primes
@@ -111,6 +133,9 @@ class TestPrimes extends Primes
         {
             totalSum.addAndGet(cur);
             counter.incrementAndGet();
+
+            cleanQueue();
+            q.add(cur);
         }
     }
 }
