@@ -14,7 +14,7 @@ The main approach for finding primes can be seen in the single-thread function `
 The threads use the same underlying method for finding primes, but we attempt to evenly distribute the amount of work among the threads. This is done by using the `ExecutorService` library. What it does is create a pool of threads assigned to a task when it is first spawned. This library is perfect for this usecase since we have many tasks (each number that needs to be checked) and only 8 available threads. `ExecutorService` handles the assignment of the tasks to threads by using an internal queue. When a thread is finished with their task, it receives a new task from the queue. `ExecutorService` ensures that each thread uniquely gets the next task so that no two thread is working on the same task.
 One issue that must be managed is the `OutOfMemoryError` caused by the large allocation of tasks. The way this is solved is by creating a max number of tasks. Then after that pool is complete, we reinitiate `ExecutorService` and continue with the next batch of tasks.
 While each thread is working their task, we keep track of how many primes that is countered and the sum of the primes by using atomic variables.
-Using Amdahl's and finding the average time of a single-thread vs. multi-threads, it can be determined that this program is 76~88% concurrent. This is generally good as it means that there was around 3~4.5 times speedup.
+Using Amdahl's and finding the average time of a single-thread vs. multi-threads, it can be determined that this program is 76\~88% concurrent. This is generally good as it means that there was around 3\~4.5 times speedup.
 
 
 # 8-thread-prime-find
