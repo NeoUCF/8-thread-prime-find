@@ -34,7 +34,11 @@ public class Primes implements Runnable
         multiThreadPrime(UP_TO);
         final long endTime = System.currentTimeMillis();
 
-        System.out.println("Total execution time: " + (endTime - startTime));
+        long executionTime = endTime - startTime;
+        Object[] a = q.toArray();
+        Arrays.sort(a);
+        System.out.println(executionTime + "ms\t" + counter + "\t" + totalSum);
+        System.out.println(Arrays.toString(a));
     }
 
     public static boolean isPrime(long p)
@@ -76,13 +80,6 @@ public class Primes implements Runnable
 
         while (q.size() != MAX_QUEUE_SIZE)
             cleanQueue();
-
-        Object[] a = q.toArray();
-        Arrays.sort(a);
-
-        System.out.println("totalSum: " + totalSum);
-        System.out.println("counter: " + counter);
-        System.out.println(Arrays.toString(a));
 
         return totalSum.getAcquire();
     }
