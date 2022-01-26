@@ -14,9 +14,9 @@ public class Primes implements Runnable
     public static final int MAX_NUM_THREADS = 8;
     public static final int MAX_QUEUE_SIZE = 10;
 
-    public static final AtomicLong totalSum = new AtomicLong(0);
-    public static final AtomicInteger counter = new AtomicInteger(0);
-    public static final AtomicInteger currentNum = new AtomicInteger(2);
+    public static final AtomicLong totalSum = new AtomicLong(2);
+    public static final AtomicInteger counter = new AtomicInteger(1);
+    public static final AtomicInteger currentNum = new AtomicInteger(3);
     public static final AtomicIntegerArray sieve = new AtomicIntegerArray(UP_TO + 1);
 
     public static final PriorityBlockingQueue<Long> q = new PriorityBlockingQueue<Long>(MAX_QUEUE_SIZE);
@@ -105,7 +105,7 @@ public class Primes implements Runnable
 
         setSieve1(sieve, (int)n);
 
-        for (int i = 2; i < n; i++)
+        for (int i = 2; i <= n; i++)
         {
             if (!sieve[i])
             {
@@ -154,7 +154,7 @@ public class Primes implements Runnable
                 for (int j = i * i; j <= n; j += i)
                     sieve.set(j, 1);
     }
-
+/*
     public static void loop(int n)
     {
         ExecutorService service = Executors.newFixedThreadPool(MAX_NUM_THREADS);
@@ -174,7 +174,63 @@ public class Primes implements Runnable
         //     System.err.println("Error: " + e);
         // }
     }
+*/
+    public static void multiSieve(int n)
+    {
+        // for (int i = 2 * threadNum; i * i <= n; i += 2 * MAX_NUM_THREADS)
+        //     if (sieve.getAcquire(i) == 0)
+        //         for (int j = i * i; j <= n; j += i)
+        //             sieve.set(j, 1);
+        // for (int i = 2; i * i <= n; i++)
+        // {
+        //     for (int j = i * threadNum; j <= n; j += i * MAX_NUM_THREADS)
+        //     {
+        //         if (sieve.getAcquire(j) == 0)
+        //         {
+        //             sieve.set(j, 1);
+        //         }
+        //     }
+        // }
 
+        ExecutorService service = Executors.newFixedThreadPool(MAX_NUM_THREADS);
+        for (int i = 2; i * i <= n; i++)
+            if (sieve.getAcquire(i) == 0)
+            {
+
+                for (int j = 1; j <= 8; j++)
+                    service.submit(new PrimeSieve(i, j));
+                
+            }
+        
+            service.shutdown();
+
+        // try {
+        //     service.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+        // } catch (InterruptedException e) {
+        //     System.err.println("Error: " + e);
+        // }
+    }
+
+    public static void multiSieve2(int n)
+    {
+        ExecutorService service = Executors.newFixedThreadPool(MAX_NUM_THREADS);
+
+        for (int j = 1; j <= 8; j++)
+            service.submit(new PrimeSieve2(j));
+
+        service.shutdown();
+        try {
+            service.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+        } catch (InterruptedException e) {
+            System.err.println("Error: " + e);
+        }
+    }
+
+    // public static void multiSieve3(int n)
+    
+
+    // Instead of threading each number to sieve,
+    // Why not multithread the counting of the numbers for the sieve
     private static void multiThreadPrimeSieve(int n)
     {
         sieve.set(0, 1);
@@ -182,53 +238,35 @@ public class Primes implements Runnable
         long sum = 0;
         int count = 0;
 
-        ExecutorService service = Executors.newFixedThreadPool(MAX_NUM_THREADS);
+        // ExecutorService service = Executors.newFixedThreadPool(MAX_NUM_THREADS);
         int[] firstEightPrimes = {2, 3, 5, 7, 11, 13, 17, 19};
 
-        service.submit(new PrimeSieve(2));
+        // service.submit(new PrimeSieve(2));
+        // setSieve(n);
+        // multiSieve(n);
+        multiSieve2(n);
+        // multiSieve3(n);
 
-        for (int p = 3; p < 16; p += 2)
-        {
-            service.submit(new PrimeSieve(p));
-        }
-        System.out.println("done" + sieve.get(18));
-        
-        // for (int i = 23; i <= n; i += 2)
+        // for (int i = 3; i <= n; i += 2)
         // {
         //     service.submit(new PrimeSieve(i));
         // }
 
-        service.shutdown();
-        System.out.println("done" + sieve.get(18));
+        // service.shutdown();
 
-        try {
-            service.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
-        } catch (InterruptedException e) {
-            System.err.println("Error: " + e);
-        }
-        System.out.println("done" + sieve.get(18));
-
-        // currentNum.set(23); // Next known prime to count off with
-
-        // for (int i = MAX_TASKS; i <= n; i += MAX_TASKS)
-        // {
-        //     loop(i);
-        //     System.out.println(i + " batches " + currentNum.getAcquire());
+        // try {
+        //     service.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+        // } catch (InterruptedException e) {
+        //     System.err.println("Error: " + e);
         // }
 
-        // setSieve(n);
-        System.out.println("done" + sieve.get(18));
-
-        for (int i = 2; i < n; i++)
+        for (int i = 2; i <= n; i++)
         {
             if (sieve.getAcquire(i) == 0)
             {
-                totalSum.getAndAdd(i);
-                // arr[count%10] = i;
-                counter.incrementAndGet();
                 sum += i;
-                // arr[count%10] = i;
                 count++;
+                // System.out.print(i +", ");
             }
         }
 
@@ -280,34 +318,85 @@ public class Primes implements Runnable
     }
 }
 
-class PrimeSieve extends Primes
+class PrimeSieve3 extends Primes
 {
-    public int cur;
+    public int threadNum;
 
-    public PrimeSieve(int i)
+    public PrimeSieve3(int th)
     {
-        cur = i;
+        threadNum = th;
     }
 
     public void run()
     {
-        System.out.println("running" + cur);
-        for (int i = cur; i * i <= UP_TO; i += 8)
-        {
-            // System.out.println(i);
+        // System.out.println("running" + cur);
+        // for (int i = cur; i * i <= UP_TO; i++)
+        // if ((sieve.getAcquire(cur) == 0) && (cur * cur <= UP_TO))
+        //     for (int j = cur * cur; j <= UP_TO; j += cur)
+        //         sieve.set(j, 1);
+        // System.out.println("finished " + cur);
 
+        for (int i = 2; i * i <= UP_TO; i++)
             if (sieve.getAcquire(i) == 0)
-                for (int j = i * i; j <= UP_TO; j += i)
-                {
-                    // System.out.println(j);
+            {
+                totalSum.addAndGet(i);
+                counter.incrementAndGet();
+                for (int p = i * (threadNum + 1); p <= UP_TO; p += i * MAX_NUM_THREADS)
+                    sieve.set(p, 1);
+            }
+    }
+}
 
-                    sieve.getAndIncrement(j);
-                    // System.out.println("process" + i);
-                    
-                }
-        }
-        System.out.println("finished " + cur);
+class PrimeSieve2 extends Primes
+{
+    public int threadNum;
 
+    public PrimeSieve2(int th)
+    {
+        threadNum = th;
+    }
+
+    public void run()
+    {
+        // System.out.println("running" + cur);
+        // for (int i = cur; i * i <= UP_TO; i++)
+        // if ((sieve.getAcquire(cur) == 0) && (cur * cur <= UP_TO))
+        //     for (int j = cur * cur; j <= UP_TO; j += cur)
+        //         sieve.set(j, 1);
+        // System.out.println("finished " + cur);
+
+        for (int i = 2; i * i <= UP_TO; i++)
+            if (sieve.getAcquire(i) == 0)
+            {
+
+                for (int p = i * (threadNum + 1); p <= UP_TO; p += i * MAX_NUM_THREADS)
+                    sieve.set(p, 1);
+            }
+    }
+}
+
+class PrimeSieve extends Primes
+{
+    public int cur;
+    public int threadNum;
+
+    public PrimeSieve(int i, int j)
+    {
+        cur = i;
+        threadNum = j;
+    }
+
+    public void run()
+    {
+        // System.out.println("running" + cur);
+        // for (int i = cur; i * i <= UP_TO; i++)
+        // if ((sieve.getAcquire(cur) == 0) && (cur * cur <= UP_TO))
+        //     for (int j = cur * cur; j <= UP_TO; j += cur)
+        //         sieve.set(j, 1);
+        // System.out.println("finished " + cur);
+
+        for (int p = cur * (threadNum + 1); p <= UP_TO; p += cur * MAX_NUM_THREADS)
+            sieve.set(p, 1);
     }
 }
 
