@@ -3,18 +3,20 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicIntegerArray;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class Primes implements Runnable
 {
-    public static final long UP_TO = (long)1E8;
+    public static final long UP_TO = (long)1E7;
     public static final long MAX_TASKS = (long)1E7;
     public static final int MAX_NUM_THREADS = 8;
     public static final int MAX_QUEUE_SIZE = 10;
 
     public static final AtomicLong counter = new AtomicLong(1);
     public static final AtomicLong totalSum = new AtomicLong(2);
-    public static final AtomicLong currentNum = new AtomicLong(3);
+    public static final AtomicLong currentNum = new AtomicLong(2);
+    public static final AtomicIntegerArray sieve = new AtomicIntegerArray(20000000);
 
     public static final PriorityBlockingQueue<Long> q = new PriorityBlockingQueue<Long>(MAX_QUEUE_SIZE);
 
@@ -31,7 +33,8 @@ public class Primes implements Runnable
     private static void findPrimes()
     {
         final long startTime = System.currentTimeMillis();
-        multiThreadPrime(UP_TO);
+        // multiThreadPrime(UP_TO);
+        oneThreadPrime(UP_TO);
         final long endTime = System.currentTimeMillis();
 
         long executionTime = endTime - startTime;
@@ -43,6 +46,7 @@ public class Primes implements Runnable
 
     public static boolean isPrime(long p)
     {
+        // System.out.println(p);
         for (long i = 3; i * i <= p; i += 2)
             if ((p % i) == 0)
                 return false;
@@ -50,21 +54,41 @@ public class Primes implements Runnable
         return true;
     }
 
+    public static void debugPrint()
+    {
+        System.out.println("in sieve");
+        for (int i = 0; i < 10; i++)
+        {
+            // System.out.println(sieve.get(i));
+        }
+    }
+
+    public static boolean isPrime2(long[] sieve, long p)
+    {
+        // System.out.println(p);
+        for (int i = 0; sieve[i] * sieve[i] <= p; i++)
+            if ((p % sieve[i]) == 0)
+                return false;
+
+        return true;
+    }
+
     private static long oneThreadPrime(long n)
     {
-        // System.out.println(n);
-        
-        if (n < 2) return 0;
-        long sum = 2;
-        long count = 1;
+        long[] sieve = new long[20000000];
+        long sum = sieve[0] = 2;
+        int count = 1;
 
-        for (long i = 3; i <= n; i += 2)
-            if (isPrime(i))
+        for (int i = 3; i <= n; i += 2)
+        {
+            if (isPrime2(sieve, i))
+            // if(isPrime(i))
             {
-                // System.out.println(i + ", ");
                 sum += i;
+                sieve[count] = i;
                 count++;
             }
+        }
 
         System.out.println("sum: " + sum);
         System.out.println("count: " + count);
