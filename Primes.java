@@ -8,7 +8,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 public class Primes implements Runnable
 {
-    public static final long UP_TO = (long)1E7;
+    public static final long UP_TO = (long)1E8;
     public static final long MAX_TASKS = (long)1E7;
     public static final int MAX_NUM_THREADS = 8;
     public static final int MAX_QUEUE_SIZE = 10;
@@ -34,7 +34,8 @@ public class Primes implements Runnable
     {
         final long startTime = System.currentTimeMillis();
         // multiThreadPrime(UP_TO);
-        oneThreadPrime(UP_TO);
+        // oneThreadPrime(UP_TO);
+        oneThreadPrimeSieve(UP_TO);
         final long endTime = System.currentTimeMillis();
 
         long executionTime = endTime - startTime;
@@ -71,6 +72,54 @@ public class Primes implements Runnable
                 return false;
 
         return true;
+    }
+
+    public static boolean isPrime3(boolean[] sieve, int p)
+    {
+        for (int i = 2; i * i <= p; i++)
+            if (sieve[i])
+                for (int j = i * i; j <= p; j += i)
+                    sieve[j] = false;
+
+        return !sieve[p];
+    }
+
+    // if element in sieve is false, then it's prime
+    public static void setSieve(boolean[] sieve, int n)
+    {
+        for (int i = 2; i * i <= n; i++)
+            if (!sieve[i])
+                for (int j = i * i; j <= n; j += i)
+                    sieve[j] = true;
+    }
+
+    private static long oneThreadPrimeSieve(long n)
+    {
+        boolean[] sieve = new boolean[(int)n + 1];
+        sieve[0] = sieve[1] = true;
+        long sum = 0;
+        int count = 0;
+        int[] arr = new int[10];
+
+        setSieve(sieve, (int)n);
+
+        for (int i = 2; i < n; i++)
+        {
+            if (!sieve[i])
+            {
+                sum += i;
+                arr[count%10] = i;
+                count++;
+            }
+        }
+
+        System.out.println("sum: " + sum);
+        System.out.println("count: " + count);
+        Arrays.sort(arr);
+        System.out.println("Top 10 primes: " + Arrays.toString(arr));
+
+        // for (int i = (int)n - 10; i < ; i++)
+        return n;
     }
 
     private static long oneThreadPrime(long n)
