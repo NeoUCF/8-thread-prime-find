@@ -43,7 +43,7 @@ public class Primes implements Runnable
 
     public static boolean isPrime(long p)
     {
-        for (long i = 3; i <= Math.pow(p, 0.5); i += 2)
+        for (long i = 3; i * i <= p; i += 2)
             if ((p % i) == 0)
                 return false;
 
