@@ -16,8 +16,9 @@ public class Primes implements Runnable
 
     public static final AtomicLong totalSum = new AtomicLong(2);
     public static final AtomicInteger counter = new AtomicInteger(1);
-    public static final AtomicInteger currentNum = new AtomicInteger(3);
+    public static final AtomicInteger currentNum = new AtomicInteger(2);
     public static final AtomicIntegerArray sieve = new AtomicIntegerArray(UP_TO + 1);
+    public static volatile boolean[] boolSieve = new boolean[UP_TO + 1];
 
     public static final PriorityBlockingQueue<Long> q = new PriorityBlockingQueue<Long>(MAX_QUEUE_SIZE);
 
@@ -226,8 +227,106 @@ public class Primes implements Runnable
         }
     }
 
-    // public static void multiSieve3(int n)
+    public static void multiSieve3(int n)
+    {
+        for (int i = 1; i <= MAX_NUM_THREADS; i++)
+        {
+            PrimeSieve3 p = new PrimeSieve3(i);
+            Thread th = new Thread(p);
+            th.start();
+            try
+            {
+                th.join(1);
+                System.out.println("Current Thread: " + Thread.currentThread().getName());
+            }
+            catch(Exception ex)
+            {
+                System.out.println("Exception has" + " been caught" + ex);
+            }
+        }
+        System.out.println(Thread.activeCount() + "Out the loop" +  Thread.currentThread());
+
+        try
+        {
+            Thread.sleep(2000);
+            System.out.println("Current Thread: " + Thread.currentThread().getName());
+        }
+        catch(Exception ex)
+        {
+            System.out.println("Exception has" + " been caught" + ex);
+        }
+    }
     
+    // if element in sieve is 0, then it's prime
+    public static void setSieve2(int n)
+    {
+        for (int i = 2; i * i <= n; i++)
+            if (!boolSieve[i])
+                for (int j = i * i; j <= n; j += i)
+                    boolSieve[j] = true;
+    }
+
+    public static void multiSieve4(int n)
+    {
+        // for (int i = 1; i <= MAX_NUM_THREADS; i++)
+        // {
+        //     PrimeSieve3 p = new PrimeSieve3(i);
+        //     Thread th = new Thread(p);
+        //     th.start();
+        //     try
+        //     {
+        //         th.join(1);
+        //         System.out.println("Current Thread: " + Thread.currentThread().getName());
+        //     }
+        //     catch(Exception ex)
+        //     {
+        //         System.out.println("Exception has" + " been caught" + ex);
+        //     }
+        // }
+
+        PrimeSieve5 p1 = new PrimeSieve5(2);
+        Thread th1 = new Thread(p1);
+        PrimeSieve5 p2 = new PrimeSieve5(3);
+        Thread th2 = new Thread(p2);
+        PrimeSieve5 p3 = new PrimeSieve5(5);
+        Thread th3 = new Thread(p3);
+        PrimeSieve5 p4 = new PrimeSieve5(7);
+        Thread th4 = new Thread(p4);
+        PrimeSieve5 p5 = new PrimeSieve5(11);
+        Thread th5 = new Thread(p5);
+        PrimeSieve5 p6 = new PrimeSieve5(13);
+        Thread th6 = new Thread(p6);
+        PrimeSieve5 p7 = new PrimeSieve5(17);
+        Thread th7 = new Thread(p7);
+        PrimeSieve5 p8 = new PrimeSieve5(19);
+        Thread th8 = new Thread(p8);
+        try
+        {
+            th1.start();
+        //     th1.join(10);
+            th2.start();
+        //     th2.join(10);
+            th3.start();
+        //     th3.join(10);
+            th4.start();
+        //     th4.join(10);
+            th5.start();
+        //     th5.join(10);
+            th6.start();
+        //     th6.join(10);
+            th7.start();
+        //     th7.join(10);
+            th8.start();
+            th8.join();
+
+        //     System.out.println("Current Thread: " + Thread.currentThread().getName());
+        }
+        catch(Exception ex)
+        {
+        //     System.out.println("Exception has" + " been caught" + ex);
+        }
+        // System.out.println("OUTS");
+    }
 
     // Instead of threading each number to sieve,
     // Why not multithread the counting of the numbers for the sieve
@@ -235,6 +334,7 @@ public class Primes implements Runnable
     {
         sieve.set(0, 1);
         sieve.set(1, 1);
+        // boolSieve[0] = boolSieve[1] = true;
         long sum = 0;
         int count = 0;
 
@@ -244,8 +344,11 @@ public class Primes implements Runnable
         // service.submit(new PrimeSieve(2));
         // setSieve(n);
         // multiSieve(n);
-        multiSieve2(n);
+        // multiSieve2(n);
         // multiSieve3(n);
+        multiSieve4(n);
+
+
 
         // for (int i = 3; i <= n; i += 2)
         // {
@@ -315,6 +418,47 @@ public class Primes implements Runnable
                 System.err.println("Error: " + e);
             }
         }
+    }
+}
+
+class PrimeSieve6 extends Primes
+{
+
+}
+
+class PrimeSieve5 extends Primes
+{
+    public int cur;
+
+    public PrimeSieve5(int th)
+    {
+        cur = th;
+    }
+
+    public void run()
+    {
+        for (int i = cur; i * i <= UP_TO; i++)
+            if (sieve.getAcquire(i) == 0)
+                for (int j = i * i; j <= UP_TO; j += i)
+                    sieve.getAndSet(j, 1);
+    }
+}
+
+class PrimeSieve4 extends Primes
+{
+    public int threadNum;
+
+    public PrimeSieve4(int th)
+    {
+        threadNum = th;
+    }
+
+    public void run()
+    {
+        for (int i = 2; i * i <= UP_TO; i++)
+            if (!boolSieve[i])
+                for (int p = i * (threadNum + 1); p <= UP_TO; p += i * MAX_NUM_THREADS)
+                    boolSieve[p] = true;
     }
 }
 
