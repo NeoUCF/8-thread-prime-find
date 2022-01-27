@@ -1,3 +1,5 @@
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -37,8 +39,26 @@ public class Primes implements Runnable
         long executionTime = endTime - startTime;
         Object[] a = q.toArray();
         Arrays.sort(a);
-        System.out.println(executionTime + "ms\t" + counter + "\t" + totalSum);
-        System.out.println(Arrays.toString(a));
+
+        try {
+            FileWriter myWriter = new FileWriter("primes.txt");
+            myWriter.write("Prime Count: " + counter + "\n");
+            myWriter.write("Execution Time: " + executionTime + "ms");
+            myWriter.write("Sum of Primes: " + totalSum + "\n");
+            myWriter.write("Top Ten:\n");
+            for (Object i : a)
+                myWriter.write(i.toString() + "\n");
+            myWriter.close();
+        } catch (IOException e) {
+            System.out.println("An error occurred.");
+            e.printStackTrace();
+        }
+        System.out.println("Prime Count: " + counter);
+        System.out.println("Execution Time: " + executionTime + "ms");
+        System.out.println("Sum of Primes: " + totalSum);
+        System.out.println("Top Ten:");
+        for (Object i : a)
+            System.out.println(i);
     }
 
     public static boolean isPrime(long p)
@@ -49,6 +69,45 @@ public class Primes implements Runnable
 
         return true;
     }
+
+    // if element in sieve is false, then it's prime
+    public static void setSieve(boolean[] sieve, int n)
+    {
+        for (int i = 2; i * i <= n; i++)
+            if (!sieve[i])
+                for (int j = i * i; j <= n; j += i)
+                    sieve[j] = true;
+    }
+
+    private static long oneThreadPrimeSieve(long n)
+    {
+        boolean[] sieve = new boolean[(int)n + 1];
+        sieve[0] = sieve[1] = true;
+        long sum = 0;
+        int count = 0;
+        int[] arr = new int[10];
+
+        setSieve(sieve, (int)n);
+
+        for (int i = 2; i <= n; i++)
+        {
+            if (!sieve[i])
+            {
+                sum += i;
+                arr[count%10] = i;
+                count++;
+            }
+        }
+
+        System.out.println("sum: " + sum);
+        System.out.println("count: " + count);
+        Arrays.sort(arr);
+        System.out.println("Top 10 primes: " + Arrays.toString(arr));
+
+        // for (int i = (int)n - 10; i < ; i++)
+        return n;
+    }
+
 
     private static long oneThreadPrime(long n)
     {
