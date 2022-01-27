@@ -1,22 +1,17 @@
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.Arrays;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.PriorityBlockingQueue;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicIntegerArray;
 
 public class Primes implements Runnable
 {
-    public static final long UP_TO = (long)1E8;
-    public static final long MAX_TASKS = (long)1E7;
     public static final int MAX_NUM_THREADS = 8;
-    public static final int MAX_QUEUE_SIZE = 10;
+    public static final int UP_TO = (int)1E8;
+    public static int count = 0;
+    public static long sum = 0;
+    public static int[] arr = new int[10];
 
-    public static final AtomicLong counter = new AtomicLong(1);
-    public static final AtomicLong totalSum = new AtomicLong(2);
-    public static final AtomicLong currentNum = new AtomicLong(3);
-
-    public static final PriorityBlockingQueue<Long> q = new PriorityBlockingQueue<Long>(MAX_QUEUE_SIZE);
+    public static final AtomicIntegerArray sieve = new AtomicIntegerArray(UP_TO + 1);
 
     public static void main(String[] args)
     {
@@ -31,108 +26,92 @@ public class Primes implements Runnable
     private static void findPrimes()
     {
         final long startTime = System.currentTimeMillis();
-        multiThreadPrime(UP_TO);
+        multiThreadPrimeSieve(UP_TO);
         final long endTime = System.currentTimeMillis();
 
         long executionTime = endTime - startTime;
-        Object[] a = q.toArray();
-        Arrays.sort(a);
-        System.out.println(executionTime + "ms\t" + counter + "\t" + totalSum);
-        System.out.println(Arrays.toString(a));
-    }
-
-    public static boolean isPrime(long p)
-    {
-        for (long i = 3; i * i <= p; i += 2)
-            if ((p % i) == 0)
-                return false;
-
-        return true;
-    }
-
-    private static long oneThreadPrime(long n)
-    {
-        // System.out.println(n);
-        
-        if (n < 2) return 0;
-        long sum = 2;
-        long count = 1;
-
-        for (long i = 3; i <= n; i += 2)
-            if (isPrime(i))
-            {
-                // System.out.println(i + ", ");
-                sum += i;
-                count++;
-            }
-
-        System.out.println("sum: " + sum);
-        System.out.println("count: " + count);
-        return sum;
-    }
-
-    private static long multiThreadPrime(long n)
-    {
-        if (n < 2) return 0;
-
-        for (long i = MAX_TASKS; i <= n; i += MAX_TASKS)
-            loop(i);
-
-        while (q.size() != MAX_QUEUE_SIZE)
-            cleanQueue();
-
-        return totalSum.getAcquire();
-    }
-
-    public static void loop(long n)
-    {
-        ExecutorService service = Executors.newFixedThreadPool(MAX_NUM_THREADS);
-
-        while (currentNum.getAcquire() <= n)
-        {
-            service.submit(new TestPrimes(currentNum.getAcquire()));
-            currentNum.addAndGet(2);
-        }
-        service.shutdown();
 
         try {
-            service.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
-        } catch (InterruptedException e) {
-            System.err.println("Error: " + e);
+            FileWriter myWriter = new FileWriter("primes.txt");
+            myWriter.write("Prime Count: " + count + "\n");
+            myWriter.write("Execution Time: " + executionTime + "ms\n");
+            myWriter.write("Sum of Primes: " + sum + "\n");
+            myWriter.write("Top Ten:\n");
+            for (int i : arr)
+                myWriter.write(i + "\n");
+            myWriter.close();
+        } catch (IOException e) {
+            System.out.println("An error occurred.");
+            e.printStackTrace();
+        }
+
+        System.out.println("Prime Count: " + count);
+        System.out.println("Execution Time: " + executionTime + "ms");
+        System.out.println("Sum of Primes: " + sum);
+        System.out.println("Top Ten:");
+        for (Object i : arr)
+            System.out.println(i);
+    }
+
+    public static void multiSieve(int n)
+    {
+        //Make array of Thread objects
+        Thread[] sieveThreads = new Thread[MAX_NUM_THREADS];
+
+        //Fill array with PrimeSieve objects
+        for(int i = 0; i < MAX_NUM_THREADS; i++)
+        {
+            sieveThreads[i] = new Thread(new PrimeSieve(i + 1));
+            sieveThreads[i].start();
+        }
+
+        try
+        {
+            sieveThreads[MAX_NUM_THREADS-1].join();
+        }
+        catch(Exception ex)
+        {
+            System.out.println("Exception has been caught" + ex);
         }
     }
 
-    public static void cleanQueue()
+    // Instead of threading each number to sieve,
+    // Why not multithread the counting of the numbers for the sieve
+    private static void multiThreadPrimeSieve(int n)
     {
-        if (q.size() > MAX_QUEUE_SIZE)
+        sieve.set(0, 1);
+        sieve.set(1, 1);
+
+        multiSieve(n);
+
+        for (int i = 2; i <= n; i++)
         {
-            try {
-                q.take();
-            } catch (InterruptedException e) {
-                System.err.println("Error: " + e);
+            if (sieve.getAcquire(i) == 0)
+            {
+                sum += i;
+                arr[count%10] = i;
+                count++;
             }
         }
+
+        Arrays.sort(arr);
     }
 }
 
-class TestPrimes extends Primes
+class PrimeSieve extends Primes
 {
-    public long cur;
+    public int threadNum;
 
-    public TestPrimes(long i)
+    public PrimeSieve(int th)
     {
-        cur = i;
+        threadNum = th;
     }
 
     public void run()
     {
-        if (isPrime(cur))
-        {
-            totalSum.addAndGet(cur);
-            counter.incrementAndGet();
-
-            cleanQueue();
-            q.add(cur);
-        }
+        for (int i = 2; i * i <= UP_TO; i++)
+            if (sieve.getAcquire(i) == 0)
+                for (int p = i * (threadNum + 1); p <= UP_TO; p += i * MAX_NUM_THREADS)
+                    sieve.set(p, 1);
     }
 }
