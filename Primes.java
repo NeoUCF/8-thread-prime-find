@@ -23,8 +23,27 @@ public class Primes implements Runnable
         // System.out.println("Running thread!");
     }
 
+    private static void timeAverage(int n)
+    {
+        long totalTime = 0;
+
+        for (int i = 0; i < n; i++)
+        {
+            count = 0;
+            sum = 0;
+            arr = new int[10];
+            final long startTime = System.currentTimeMillis();
+            multiThreadPrimeSieve(UP_TO);
+            final long endTime = System.currentTimeMillis();
+            totalTime += endTime - startTime;
+        }
+
+        System.out.println("Average Time: " + (totalTime / n));
+    }
+
     private static void findPrimes()
     {
+        // timeAverage(100);
         final long startTime = System.currentTimeMillis();
         multiThreadPrimeSieve(UP_TO);
         final long endTime = System.currentTimeMillis();
@@ -59,22 +78,25 @@ public class Primes implements Runnable
         Thread[] sieveThreads = new Thread[MAX_NUM_THREADS];
 
         //Fill array with PrimeSieve objects
-        for(int i = 0; i < MAX_NUM_THREADS; i++)
+        for (int i = 0; i < MAX_NUM_THREADS; i++)
         {
             sieveThreads[i] = new Thread(new PrimeSieve(i + 1));
             sieveThreads[i].start();
         }
 
-        try
+        for (int i = 0; i < MAX_NUM_THREADS; i++)
         {
-            sieveThreads[MAX_NUM_THREADS-1].join();
-        }
-        catch(Exception ex)
-        {
-            System.out.println("Exception has been caught" + ex);
+            try
+            {
+                sieveThreads[i].join();
+            }
+            catch(Exception ex)
+            {
+                System.out.println("Exception has been caught" + ex);
+            }
         }
     }
-
+    
     // Instead of threading each number to sieve,
     // Why not multithread the counting of the numbers for the sieve
     private static void multiThreadPrimeSieve(int n)

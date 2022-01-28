@@ -3,9 +3,32 @@ On the command prompt, go to the directory which contains Primes.java, then run:
 `java Primes.java`
 
 
-
 # Design Summary:
-The program utilizes multiple threads by using the `import java.util.concurrent` library.
+The program utilizes multiple threads by using the Threads class.
+## Informal Statement:
+This program utilizes a sieve to keep track of previously known values that are composite. The program distributes the flitering of each number to 8 processors (threads). First we assume all numbers in the range (except 0 and 1) are prime. Then the processors will start with the lowest prime (2), then mark all multiples of it as not prime. When all are marked in the range, we iterate to the next lowest prime (3) and repeat the same process until the sieve is complete.
+After, finding the primes are as simple as going through the sieve and collecting which number is marked as prime. This design is correct as it ensures that each thread fills the sieve before continuing with the finding of primes. This design is efficient as it utilizes all 8 threads and schedules unique (unrepeated) tasks for each to complete. Work is distributed evenly by having each thread represent a multiple of a prime and it marks all multiples as not prime.
+## Summary and Experiementational Evaulation:
+By using the `timeAverage()` in the program, I am able to quickly determine the average time of n runs.
+These tests were done on a Lenovo IdeaPad Flex 5 which has a series 4000 Ryzen 7.
+### Single-Thread:
+This is tested by altering the `MAX_NUM_THREADS` to be 1.
+After 100 runs, the average execution time was: `2370`
+### Multi-Thread:
+This is tested by altering the `MAX_NUM_THREADS` to be 8.
+After 100 runs, the average execution time was: `2086`
+### Correctness:
+As described in the the informal statement. The sieve gets sequentially filled. In order to keep this correct in a multi-threaded approach, the sieve still gets filled sequentially, but the marking of the multiples gets distributed based on the thread's number. So if we are filling the sieve starting with 2, on the first iteration thread-1 will mark 4 as prime, thread-2 will mark 6 as prime, thread-3 will mark 8 as prime, and so on up to thread-8 marking 16 as prime. The second iteration will have thread-1 mark 18 as prime, thread-2 mark 20 as prime, and so on. The iterations will be done when we get past 10<sup>8</sup>. Next we find the next lowest prime (which would be 3) and follow the same process up to the square root of 10<sup>8</sup>.
+### Efficiency:
+The reason why we can check up to the square root is because the square root will be the largest number necessary to check if it is prime. For example, for the number 36, the factors are 2, 3, 4, 6, 9, 12, and 18; and 6 his the largest necessary number to check up to. This is particularly useful for a number that is the square of a prime. Ex. 25, we check and find that the factor 5 proves it to be composite.
+### Evaluation:
+Based on the results, we can find by Amdahl's Law that the multi-thread approach is 13.7% concurrent with a 1.134 speed up.
+
+
+
+# Design Summary (Version 1):
+This was my first method to finding primes. The methods can be found in the `individual-checking` branch. Below, was my analysis for this method.
+The program utilizes multiple threads by using the `import java.util.concurrent` library. In particular, the ExecutorService Class.
 ## Informal Statement:
 This program checks every odd number up to 10<sup>8</sup> to see if it is prime. The program distributes the checking of each number to 8 processors (threads). When finding a prime, each thread will update shared counters to reveal the number of primes and the sum of those primes. This design is correct as it ensures that each thread gets a unique task and it updates the counters properly. This design is efficient as it utilizes all 8 threads and schedules the tasks to an available thread immediately.
 ## Method for Finding Primes:
@@ -77,4 +100,4 @@ Please print the following output to a file named primes.txt:
 * <https://stackoverflow.com/questions/13398212/can-i-use-priorityblockingqueue-with-multiple-threads>
 * <https://stackoverflow.com/questions/5695017/priorityqueue-not-sorting-on-add>
 
-Also Checkout the `commentedOut` branch to see other ideas and process tried.
+Also Checkout the `commentedOut` and `sieve` branch to see other ideas and process tried.

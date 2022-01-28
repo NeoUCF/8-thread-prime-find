@@ -1,5 +1,5 @@
 Prime Count: 5761455
-Execution Time: 2469ms
+Execution Time: 2279ms
 Sum of Primes: 279209790387276
 Top Ten:
 99999787
